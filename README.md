@@ -16,10 +16,10 @@ uv run python generate-client-ca.py
 
 
 # Run the server - defaults to localhost:8443
-uv run server/server.py
+uv run python server/server.py
 
 # In another terminal
-uv run client/client.py
+uv run python client/client.py
 ```
 
 ## Otherwise
@@ -28,10 +28,10 @@ uv run client/client.py
 python generate-server-ca.py
 python generate-client-ca.py
 
-server/server.py
+python server/server.py
 
 # In another terminal
-client/client.py
+python client/client.py
 ```
 
 ## curl
