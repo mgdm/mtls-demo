@@ -12,6 +12,7 @@ ssl_context.load_cert_chain("ca/client/client.pem",
                             PASSPHRASE)
 
 # Load the CA for the server
+# We'll trust any any certificate signed by this CA
 ssl_context.load_verify_locations("ca/server/root-ca.pem")
 
 async def main():
