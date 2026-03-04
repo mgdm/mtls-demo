@@ -97,6 +97,7 @@ subject = x509.Name(
         x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, "City of Aberdeen"),
         x509.NameAttribute(NameOID.LOCALITY_NAME, "Aberdeen"),
         x509.NameAttribute(NameOID.ORGANIZATION_NAME, "My Company"),
+        # Common name in here is how the cert will be identified, unlike a server cert
         x509.NameAttribute(NameOID.COMMON_NAME, CLIENT_NAME),
     ]
 )
@@ -113,7 +114,6 @@ ee_cert = (
         datetime.datetime.now(datetime.timezone.utc)
         + datetime.timedelta(days=365)
     )
-
     # Note there is no SubjectAlternativeName extension for the client certificate
     .add_extension(
         x509.BasicConstraints(ca=False, path_length=None),
@@ -148,7 +148,9 @@ ee_cert = (
     )
     .add_extension(
         x509.AuthorityKeyIdentifier.from_issuer_subject_key_identifier(
-            root_ca_cert.extensions.get_extension_for_class(x509.SubjectKeyIdentifier).value
+            root_ca_cert.extensions.get_extension_for_class(
+                x509.SubjectKeyIdentifier
+            ).value
         ),
         critical=False,
     )

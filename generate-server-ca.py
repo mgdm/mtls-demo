@@ -30,6 +30,7 @@ with open("ca/server/root-ca.key", "wb") as f:
         )
     )
 
+# A CA root certificate is always signed by itself, so the subject and issuer are the same
 ca_subject = ca_issuer = x509.Name(
     [
         x509.NameAttribute(NameOID.COUNTRY_NAME, "GB"),
@@ -85,9 +86,9 @@ with open("ca/server/root-ca.pem", "wb") as f:
 
 # Normally you might next go and issue intermediates
 # The idea here is that you keep your root private key offline or in an HSM or whatever
-# and occasionally take it out to generate new intermediates, which you sign from
+# and occasionally take it out to generate new intermediates, which you sign more certs from
 # If the intermediate is compromised, you just create a new one, revoke the old, and carry on
-# Your clients should just trust the root CA certificate
+# Your clients should just trust the root CA certificate so that this works without interruption
 
 # We'll skip this and just issue straight from the root
 
@@ -99,6 +100,7 @@ subject = x509.Name(
         x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, "City of Aberdeen"),
         x509.NameAttribute(NameOID.LOCALITY_NAME, "Aberdeen"),
         x509.NameAttribute(NameOID.ORGANIZATION_NAME, "My Company"),
+        # You used to put a common name here but that gets ignored now by HTTP clients
     ]
 )
 
@@ -118,6 +120,7 @@ ee_cert = (
         x509.SubjectAlternativeName(
             [
                 # Describe what sites we want this certificate for.
+                # Replaces the common name
                 x509.DNSName(SERVER_NAME),
             ]
         ),
@@ -144,6 +147,7 @@ ee_cert = (
     .add_extension(
         x509.ExtendedKeyUsage(
             [
+                # Chrome recently started rejecting certs that have client auth in here
                 # x509.ExtendedKeyUsageOID.CLIENT_AUTH,
                 x509.ExtendedKeyUsageOID.SERVER_AUTH,
             ]
@@ -156,7 +160,9 @@ ee_cert = (
     )
     .add_extension(
         x509.AuthorityKeyIdentifier.from_issuer_subject_key_identifier(
-            root_ca_cert.extensions.get_extension_for_class(x509.SubjectKeyIdentifier).value
+            root_ca_cert.extensions.get_extension_for_class(
+                x509.SubjectKeyIdentifier
+            ).value
         ),
         critical=False,
     )
@@ -165,7 +171,8 @@ ee_cert = (
 
 # Write the generated server certificate to disk
 # If we had an intermediate certificate we'd also write this in here too
-# so that the complete chain is presented to the client
+# so that the complete chain back to the root is presented to the client
+# You don't need to add the root here as the client will have it already
 
 with open("ca/server/server.pem", "wb") as f:
     f.write(ee_cert.public_bytes(serialization.Encoding.PEM))
