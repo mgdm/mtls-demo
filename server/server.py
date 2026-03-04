@@ -14,6 +14,7 @@ ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
 ssl_context.load_cert_chain('ca/server/server.pem', 'ca/server/server.key', PASSPHRASE)
 
 # Set up client certificate authentication
+# We want to trust any certificates signed by this CA
 ssl_context.load_verify_locations('ca/client/root-ca.pem')
 ssl_context.verify_mode = ssl.CERT_REQUIRED
 
